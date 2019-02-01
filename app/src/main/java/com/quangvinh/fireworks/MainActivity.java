@@ -2,8 +2,6 @@ package com.quangvinh.fireworks;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -16,7 +14,9 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
+import android.widget.TextView;
 
+import java.util.Calendar;
 import java.util.Random;
 import java.util.Vector;
 
@@ -26,56 +26,37 @@ import java.util.Vector;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static final int width = Resources.getSystem().getDisplayMetrics().widthPixels;
-    public static final int height = Resources.getSystem().getDisplayMetrics().heightPixels;
-    public LinearLayout linearLayout;
-    public SeekBar quantity, speed;
+    public static final int width = Resources.getSystem().getDisplayMetrics().widthPixels;//lấy chiều rộng màn hình
+    public static final int height = Resources.getSystem().getDisplayMetrics().heightPixels;//lấy chiều cao màn hình
+    public LinearLayout linearLayout;//màn hình Canvas
+    public SeekBar speed;//SeekBar chỉnh tốc độ
+    public TextView sp;//label của SeekBar
     public static LinearLayout.LayoutParams lay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);//loại bỏ title
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);//set full screen mode
         setContentView(R.layout.activity_main);
 
         linearLayout = findViewById(R.id.RenderedScreen);
-
-        quantity = findViewById(R.id.seekBarQTT);
         speed = findViewById(R.id.seekBarSP);
+        sp = findViewById(R.id.label);
 
-        // final ImageView imageView = new ImageView(this);
-        // imageView.setImageResource(R.drawable.icon);
-        lay = new LinearLayout.LayoutParams(width, height - 300);
+//set kích thước màn hình Canvas
+        lay = new LinearLayout.LayoutParams(width, (int) (height - Utils.DptoPx(40, this) - Utils.SptoPx(10, this)));
         lay.gravity = Gravity.CENTER;
 
-        final subScreen subScr = new subScreen(this);
+        final subScreen subScr = new subScreen(this);//màn hình Canvas
         subScr.setLayoutParams(lay);
 
         linearLayout.removeAllViews();
         linearLayout.addView(subScr);
+        linearLayout.addView(sp);
         linearLayout.addView(speed);
-        linearLayout.addView(quantity);
 
-        quantity.setProgress(5);
-        quantity.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                subScreen.QUANTITY = progress;
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-
-        speed.setProgress(50);
+        speed.setProgress(0);
         speed.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -93,35 +74,22 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.red);
-        //    final ImageView imageView = (ImageView) findViewById(R.id.imageView);
-        //final Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.anim_alpha);
-
-        /*imageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                imageView.setAlpha(1f);
-            }
-        });*/
     }
 
 }
 
 class subScreen extends View {
 
+    public static int QUANTITY = 7, SPEED = 0;
     public static Context context;
-    public static int QUANTITY = 5, SPEED = 50;
+    private static int[] color = {0xff95f436, 0xffff5500, 0xffffff00, 0xff0022ff, 0xff663366};
     public static final Vector vector = new Vector();
     private Paint paint = new Paint();
     public static int width = 500, height = 500;
-    //   Bitmap bm;
 
     public subScreen(Context context) {
         super(context);
         subScreen.context = context;
-        vector.addElement(new FireWork(context));
-        //    bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.red);
-        //((MainActivity)context).linearLayout.setLayoutParams(MainActivity.lay);
     }
 
     @Override
@@ -134,19 +102,29 @@ class subScreen extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        while (vector.size() < QUANTITY) vector.addElement(new FireWork(context));
+        int x = 10, y = 10;
+
+        while (vector.size() < QUANTITY)
+            vector.addElement(new FireWork(color[Utils.nextInt(0, color.length)]));
+
         canvas.drawColor(Color.BLACK);
+
         paint.setColor(Color.RED);
-        paint.setTextSize(30);
+        paint.setTextSize(15);
         paint.setTextAlign(Paint.Align.LEFT);
-        canvas.drawText("Number of firework: " + QUANTITY, 0, paint.getTextSize(), paint);
-        canvas.drawText("Speed: " + SPEED, 0, 2 * paint.getTextSize(), paint);
+
+        canvas.drawText("Tăng tốc thêm: " + SPEED, x, y += paint.getTextSize(), paint);
+        canvas.drawText(Utils.Today(), x, y += paint.getTextSize() + 10, paint);
+        canvas.drawText(Utils.soNgay(), x, y += paint.getTextSize() + 10, paint);
+
         for (int i = 0; i < vector.size(); i++)
             ((FireWork) vector.elementAt(i)).Animate(canvas, paint);
+
         try {
-            Thread.sleep(100 - SPEED);
+            Thread.sleep(15 - SPEED);
         } catch (Exception e) {
         }
+
         invalidate();
     }
 
@@ -154,46 +132,51 @@ class subScreen extends View {
 
 class FireWork {
 
-    int[] num_of_lights = {24, 36, 72, 48, 60};
-    public static int[] img = {R.drawable.torquoise, R.drawable.blue, R.drawable.red, R.drawable.yellow};
-    Bitmap bm;
+    private int[] num_of_lights = {24, 36, 72, 48, 60};
     private static final float gravity = 0.987f;
-    float x, y, velocity, angle;
-    int size = num_of_lights[Utils.nextInt(0, num_of_lights.length)];
-    Vector lights = new Vector();
-    int life = Utils.nextInt(20, 80);
-    int lifeCheck = 0;
-    Bitmap[] bms = new Bitmap[4];
+    private float x, y, velocity, angle;
+    private Light Lights[] = new Light[num_of_lights[Utils.nextInt(0, num_of_lights.length)]];
+    private int life = Utils.nextInt(30, 90);
+    private int lifeCheck = 0;
+    private int color;
 
 
-    public FireWork(Context context) {
+    public FireWork(int color) {
         x = subScreen.width / 2 + Utils.nextInt(-subScreen.width / 4, subScreen.width / 4);
         y = subScreen.height + Utils.nextInt(-20, 0);
-        velocity = Utils.nextInt(7, 9);
-        angle = Utils.nextInt(60, 120);
-        bm = BitmapFactory.decodeResource(context.getResources(), img[Utils.nextInt(0, 3)]);
-        for (int i = 0; i < bms.length; i++) bms[i] = Bitmap.createBitmap(bm, 0, i * 7, 7, 7);
-        for (int i = 0; i < size; i++) lights.addElement(new Light(bms[3]));
+        velocity = Utils.nextInt(9, 11);
+        angle = Utils.nextInt(80, 110);
+        this.color = color;
+
+        for (int i = 0; i < Lights.length; i++) Lights[i] = new Light(color);
     }
 
     public void Animate(Canvas canvas, Paint paint) {
         int j = 2, k = 0;
+
         lifeCheck++;
+
         if (lifeCheck < life) {
-            canvas.drawBitmap(bms[lifeCheck / 4 % 4], x, y, paint);
+            paint.setColor(color);
+
+            if (life % 2 == 0) canvas.drawArc(x, y, x + 4, y + 4, 0, 360, true, paint);
+
             x += velocity * Math.cos(Math.toRadians(angle));
             y -= velocity * Math.sin(Math.toRadians(angle));
             velocity *= gravity;
-            //canvas.drawText("a", x, y, paint);
-            if (lifeCheck == life - 1) for (int i = 0; i < lights.size(); i++)
-                ((Light) lights.elementAt(i)).creatPosition(x, y);
+
+            if (lifeCheck == life - 1) for (int i = 0; i < Lights.length; i++)
+                Lights[i].creatPosition(x, y);
+
         } else if (lifeCheck < life + 15) {
-            for (int i = 0; i < lights.size(); i++) {
+
+            for (int i = 0; i < Lights.length; i++) {
+
                 if (i > 0 && i * 30 % 360 == 0) j++;
                 if (i > 0 && k * i * 30 % 360 == 0) k += 15;
 
-                Light light = null;
-                (light = ((Light) lights.elementAt(i))).setPosition(j * Math.cos(Math.toRadians(i * 30 + k)), j * Math.sin(Math.toRadians(i * 30 + k) + 0.2f));
+                Light light;
+                (light = Lights[i]).setPosition(j * Math.cos(Math.toRadians(i * 30 + k)), j * Math.sin(Math.toRadians(i * 30 + k) + 0.2f));
                 light.render(canvas, paint);
 
             }
@@ -206,16 +189,17 @@ class FireWork {
 
 class Light {
 
-    float x, y;
-    Bitmap bit;
+    private float x, y;
+    private int color;
 
-    public Light(Bitmap bm) {
-        bit = bm;
+    public Light(int color) {
+        this.color = color;
     }
 
 
     public void render(Canvas canvas, Paint paint) {
-        canvas.drawBitmap(bit, x, y, paint);
+        paint.setColor(color);
+        canvas.drawRect(x, y, x + 2, y + 2, paint);
     }
 
     public void setPosition(double x, double y) {
@@ -231,14 +215,84 @@ class Light {
 }
 
 class Utils {
+
+    private static Calendar GiaoThua = Calendar.getInstance();
+    private static long GT;
+
+    static {
+        GiaoThua.set(2019, 1, 3, 24, 0, 0);
+        GT = GiaoThua.getTimeInMillis();
+    }
+
+    public static long Now() {
+        return System.currentTimeMillis();
+    }
+
     public static final Random random = new Random();
 
     public static final int nextInt(int from, int to) {
         return Math.abs(random.nextInt()) % (to - from) + from;
     }
 
-}
+    public static String soNgay() {
+        long time = (GT - Now()) / 1000;
+        if (time <= 0) return "Chúc Mừng Năm Mới!!!";
+        String result;
+        int songay = 0, sogio = 0, sophut = 0, sogiay = 0;
+        if (time > 86400) {
+            songay = (int) time / 86400;
+            time -= songay * 86400;
+        }
+        if (time > 3600) {
+            sogio = (int) time / 3600;
+            time -= sogio * 3600;
+        }
+        if (time > 60) {
+            sophut = (int) time / 60;
+            time -= sophut * 60;
+        }
+        sogiay = (int) time;
+        result = "Còn ";
+        if (songay > 0) result += songay + " ngày ";
+        if (sogio > 0) result += sogio + " giờ ";
+        if (sophut > 0) result += sophut + " phút ";
+        if (sogiay > 0) result += sogiay + " giây ";
+        result += "nữa là đến giao thừa.";
+        return result;
+    }
 
-class Font {
+    public static float DptoPx(int Dp, Context context) {
+        return Dp * context.getResources().getDisplayMetrics().density;
+    }
+
+    public static String Today() {
+        Calendar calendar = Calendar.getInstance();
+        int tmp;
+        StringBuffer result = new StringBuffer();
+
+        tmp = calendar.get(Calendar.DAY_OF_MONTH);
+        if (tmp <= 9) result.append("0");
+        result.append(tmp + "/");
+        tmp = calendar.get(Calendar.MONTH) + 1;
+        if (tmp <= 9) result.append("0");
+        result.append(tmp + "/");
+        tmp = calendar.get(Calendar.YEAR);
+        result.append(tmp + " ");
+        tmp = calendar.get(Calendar.HOUR_OF_DAY);
+        if (tmp <= 9) result.append("0");
+        result.append(tmp + ":");
+        tmp = calendar.get(Calendar.MINUTE);
+        if (tmp <= 9) result.append("0");
+        result.append(tmp + ":");
+        tmp = calendar.get(Calendar.SECOND);
+        if (tmp <= 9) result.append("0");
+        result.append(tmp);
+
+        return result.toString();
+    }
+
+    public static float SptoPx(int Sp, Context context) {
+        return Sp * context.getResources().getDisplayMetrics().scaledDensity;
+    }
 
 }
