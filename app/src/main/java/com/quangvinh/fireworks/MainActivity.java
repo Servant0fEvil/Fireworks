@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
         sp = findViewById(R.id.label);
 
 //set kích thước màn hình Canvas
-        lay = new LinearLayout.LayoutParams(width, (int) (height - Utils.DptoPx(40, this) - Utils.SptoPx(10, this)));
+        lay = new LinearLayout.LayoutParams(width, (int) (height - Utils.DptoPx(45, this) - Utils.SptoPx(10, this)));
         lay.gravity = Gravity.CENTER;
 
         final subScreen subScr = new subScreen(this);//màn hình Canvas
@@ -110,7 +110,7 @@ class subScreen extends View {
         canvas.drawColor(Color.BLACK);
 
         paint.setColor(Color.RED);
-        paint.setTextSize(15);
+        paint.setTextSize(20);
         paint.setTextAlign(Paint.Align.LEFT);
 
         canvas.drawText("Tăng tốc thêm: " + SPEED, x, y += paint.getTextSize(), paint);
@@ -159,7 +159,7 @@ class FireWork {
         if (lifeCheck < life) {
             paint.setColor(color);
 
-            if (life % 2 == 0) canvas.drawArc(x, y, x + 4, y + 4, 0, 360, true, paint);
+            if (lifeCheck % 2 == 0) canvas.drawArc(x, y, x + 4, y + 4, 0, 360, true, paint);
 
             x += velocity * Math.cos(Math.toRadians(angle));
             y -= velocity * Math.sin(Math.toRadians(angle));
