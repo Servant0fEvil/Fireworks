@@ -110,7 +110,7 @@ class subScreen extends View {
         canvas.drawColor(Color.BLACK);
 
         paint.setColor(Color.RED);
-        paint.setTextSize(20);
+        paint.setTextSize(18);
         paint.setTextAlign(Paint.Align.LEFT);
 
         canvas.drawText("Tăng tốc thêm: " + SPEED, x, y += paint.getTextSize(), paint);
@@ -136,7 +136,7 @@ class FireWork {
     private static final float gravity = 0.987f;
     private float x, y, velocity, angle;
     private Light Lights[] = new Light[num_of_lights[Utils.nextInt(0, num_of_lights.length)]];
-    private int life = Utils.nextInt(30, 90);
+    private int life;
     private int lifeCheck = 0;
     private int color;
 
@@ -144,7 +144,8 @@ class FireWork {
     public FireWork(int color) {
         x = subScreen.width / 2 + Utils.nextInt(-subScreen.width / 4, subScreen.width / 4);
         y = subScreen.height + Utils.nextInt(-20, 0);
-        velocity = Utils.nextInt(9, 11);
+        velocity = Utils.nextInt(10, 15);
+        life = Utils.nextInt(Math.round(subScreen.height / 2 / velocity), Math.round(subScreen.height * 8 / 10 / velocity));
         angle = Utils.nextInt(80, 110);
         this.color = color;
 
@@ -220,7 +221,7 @@ class Utils {
     private static long GT;
 
     static {
-        GiaoThua.set(2019, 1, 3, 24, 0, 0);
+        GiaoThua.set(2019, 1, 4, 24, 0, 0);
         GT = GiaoThua.getTimeInMillis();
     }
 
@@ -236,9 +237,17 @@ class Utils {
 
     public static String soNgay() {
         long time = (GT - Now()) / 1000;
-        if (time <= 0) return "Chúc Mừng Năm Mới!!!";
+
+        if (time <= 0) {
+            if (time >= -518400) {
+                subScreen.QUANTITY = 12;
+                return "Chúc Mừng Năm Mới, Xuân Kỷ Hợi 2019!!!";
+            } else return "";
+        }
+
         String result;
         int songay = 0, sogio = 0, sophut = 0, sogiay = 0;
+
         if (time > 86400) {
             songay = (int) time / 86400;
             time -= songay * 86400;

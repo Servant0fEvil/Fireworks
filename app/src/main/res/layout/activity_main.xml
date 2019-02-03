@@ -8,12 +8,6 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <!--<SeekBar
-        android:id="@+id/seekBarQTT"
-        android:layout_width="match_parent"
-        android:layout_height="20dp"
-        android:layout_marginTop="20dp"
-        android:max="12" />-->
     <TextView
         android:id="@+id/label"
         android:layout_width="wrap_content"
