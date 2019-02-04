@@ -86,6 +86,10 @@ class subScreen extends View {
     public static final Vector vector = new Vector();
     private Paint paint = new Paint();
     public static int width = 500, height = 500;
+    public static int Type = 0;
+    public static boolean Pause;
+    private int temp = 1, unit = 1;
+    private long last = Utils.Now();
 
     public subScreen(Context context) {
         super(context);
@@ -104,8 +108,12 @@ class subScreen extends View {
         super.onDraw(canvas);
         int x = 10, y = 10;
 
-        while (vector.size() < QUANTITY)
-            vector.addElement(new FireWork(color[Utils.nextInt(0, color.length)]));
+        if (!Pause) {
+            if (Type == 0) DefaultType();
+            else if (Type == 1) Type1();
+            else if (Type == 2) Type2();
+            else if (Type == 3) Type3();
+        }
 
         canvas.drawColor(Color.BLACK);
 
@@ -116,6 +124,11 @@ class subScreen extends View {
         canvas.drawText("Tăng tốc thêm: " + SPEED, x, y += paint.getTextSize(), paint);
         canvas.drawText(Utils.Today(), x, y += paint.getTextSize() + 10, paint);
         canvas.drawText(Utils.soNgay(), x, y += paint.getTextSize() + 10, paint);
+        if (Utils.CountDown > 0 && Utils.CountDown <= 10) {
+            paint.setTextSize(100);
+            paint.setTextAlign(Paint.Align.CENTER);
+            canvas.drawText(Utils.CountDown + "", width / 2, height / 2, paint);
+        }
 
         for (int i = 0; i < vector.size(); i++)
             ((FireWork) vector.elementAt(i)).Animate(canvas, paint);
@@ -128,6 +141,39 @@ class subScreen extends View {
         invalidate();
     }
 
+    private final void DefaultType() {
+        while (vector.size() < QUANTITY)
+            vector.addElement(new FireWork(color[Utils.nextInt(0, color.length)]));
+    }
+
+    private final void Type1() {
+        while (vector.size() < QUANTITY) {
+            vector.addElement(new FireWork(color[Utils.nextInt(0, color.length)], temp * width / 5, height - 10, 15, 90, height / 2 / 15));
+            temp++;
+            if (temp > 4) temp = 1;
+        }
+    }
+
+    private final void Type2() {
+        while (vector.size() < QUANTITY) {
+            vector.addElement(new FireWork(color[Utils.nextInt(0, color.length)], temp * width / 5, height - 10, 15, 40 + temp * 20, height / 2 / 15));
+            temp++;
+            if (temp > 4) temp = 1;
+        }
+    }
+
+    private final void Type3() {
+        if (vector.size() >= QUANTITY) return;
+        if (Utils.Now() - last > 500) {
+            for (int i = 0; i < QUANTITY / 4; i++)
+                vector.addElement(new FireWork(color[Utils.nextInt(0, color.length)], temp * width / 5, height - 10, 15, 90, height / 2 / 15));
+            last = Utils.Now();
+            temp += unit;
+            if (temp == 4 || temp == 1) unit *= -1;
+        }
+
+    }
+
 }
 
 class FireWork {
@@ -135,7 +181,7 @@ class FireWork {
     private int[] num_of_lights = {24, 36, 72, 48, 60};
     private static final float gravity = 0.987f;
     private float x, y, velocity, angle;
-    private Light Lights[] = new Light[num_of_lights[Utils.nextInt(0, num_of_lights.length)]];
+    private Light Lights[];
     private int life;
     private int lifeCheck = 0;
     private int color;
@@ -148,6 +194,19 @@ class FireWork {
         life = Utils.nextInt(Math.round(subScreen.height / 2 / velocity), Math.round(subScreen.height * 8 / 10 / velocity));
         angle = Utils.nextInt(80, 110);
         this.color = color;
+        Lights = new Light[num_of_lights[Utils.nextInt(0, num_of_lights.length)]];
+
+        for (int i = 0; i < Lights.length; i++) Lights[i] = new Light(color);
+    }
+
+    public FireWork(int color, float x, float y, float velocity, float angle, int life) {
+        this.color = color;
+        this.x = x;
+        this.y = y;
+        this.velocity = velocity;
+        this.angle = angle;
+        this.life = life;
+        Lights = new Light[num_of_lights[4]];
 
         for (int i = 0; i < Lights.length; i++) Lights[i] = new Light(color);
     }
@@ -219,6 +278,8 @@ class Utils {
 
     private static Calendar GiaoThua = Calendar.getInstance();
     private static long GT;
+    public static int CountDown = 0;
+    private static long last = Now();
 
     static {
         GiaoThua.set(2019, 1, 4, 24, 0, 0);
@@ -238,6 +299,22 @@ class Utils {
     public static String soNgay() {
         long time = (GT - Now()) / 1000;
 
+        if (time >= 0 && time <= 15) {
+            CountDown = (int) time;
+            subScreen.QUANTITY = 0;
+        }
+        if (time <= 0 && time > -900) {
+            if (subScreen.Type == 0) subScreen.Pause = true;
+            if (Now() - last > 10000) {
+                subScreen.Pause = true;
+                if (Now() - last > 12000) {
+                    subScreen.Pause = false;
+                    subScreen.Type++;
+                    last = Now();
+                }
+            }
+            if (subScreen.Type > 3) subScreen.Type = 1;
+        }
         if (time <= 0) {
             if (time >= -518400) {
                 subScreen.QUANTITY = 12;
@@ -267,6 +344,7 @@ class Utils {
         if (sophut > 0) result += sophut + " phút ";
         if (sogiay > 0) result += sogiay + " giây ";
         result += "nữa là đến giao thừa.";
+
         return result;
     }
 
