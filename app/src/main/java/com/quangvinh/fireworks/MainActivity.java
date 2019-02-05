@@ -31,11 +31,12 @@ public class MainActivity extends AppCompatActivity {
     public LinearLayout linearLayout;//màn hình Canvas
     public SeekBar speed;//SeekBar chỉnh tốc độ
     public TextView sp;//label của SeekBar
-    public static LinearLayout.LayoutParams lay;
+    public LinearLayout.LayoutParams lay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);//loại bỏ title
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);//set full screen mode
         setContentView(R.layout.activity_main);
@@ -44,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
         speed = findViewById(R.id.seekBarSP);
         sp = findViewById(R.id.label);
 
-//set kích thước màn hình Canvas
+        //set kích thước màn hình Canvas
         lay = new LinearLayout.LayoutParams(width, (int) (height - Utils.DptoPx(45, this) - Utils.SptoPx(10, this)));
         lay.gravity = Gravity.CENTER;
 
@@ -81,7 +82,6 @@ public class MainActivity extends AppCompatActivity {
 class subScreen extends View {
 
     public static int QUANTITY = 7, SPEED = 0;
-    public static Context context;
     private static int[] color = {0xff95f436, 0xffff5500, 0xffffff00, 0xff0022ff, 0xff663366};
     public static final Vector vector = new Vector();
     private Paint paint = new Paint();
@@ -89,11 +89,10 @@ class subScreen extends View {
     public static int Type = 0;
     public static boolean Pause;
     private int temp = 1, unit = 1;
-    private long last = Utils.Now();
+    private long lastCheck = Utils.Now();
 
     public subScreen(Context context) {
         super(context);
-        subScreen.context = context;
     }
 
     @Override
@@ -106,6 +105,7 @@ class subScreen extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+
         int x = 10, y = 10;
 
         if (!Pause) {
@@ -123,7 +123,7 @@ class subScreen extends View {
 
         canvas.drawText("Tăng tốc thêm: " + SPEED, x, y += paint.getTextSize(), paint);
         canvas.drawText(Utils.Today(), x, y += paint.getTextSize() + 10, paint);
-        canvas.drawText(Utils.soNgay(), x, y += paint.getTextSize() + 10, paint);
+        canvas.drawText(Utils.soNgay(), x, y + paint.getTextSize() + 10, paint);
         if (Utils.CountDown > 0 && Utils.CountDown <= 10) {
             paint.setTextSize(100);
             paint.setTextAlign(Paint.Align.CENTER);
@@ -141,12 +141,12 @@ class subScreen extends View {
         invalidate();
     }
 
-    private final void DefaultType() {
+    private void DefaultType() {
         while (vector.size() < QUANTITY)
             vector.addElement(new FireWork(color[Utils.nextInt(0, color.length)]));
     }
 
-    private final void Type1() {
+    private void Type1() {
         while (vector.size() < QUANTITY) {
             vector.addElement(new FireWork(color[Utils.nextInt(0, color.length)], temp * width / 5, height - 10, 15, 90, height / 2 / 15));
             temp++;
@@ -154,7 +154,7 @@ class subScreen extends View {
         }
     }
 
-    private final void Type2() {
+    private void Type2() {
         while (vector.size() < QUANTITY) {
             vector.addElement(new FireWork(color[Utils.nextInt(0, color.length)], temp * width / 5, height - 10, 15, 40 + temp * 20, height / 2 / 15));
             temp++;
@@ -162,12 +162,12 @@ class subScreen extends View {
         }
     }
 
-    private final void Type3() {
+    private void Type3() {
         if (vector.size() >= QUANTITY) return;
-        if (Utils.Now() - last > 500) {
+        if (Utils.Now() - lastCheck > 500) {
             for (int i = 0; i < QUANTITY / 4; i++)
                 vector.addElement(new FireWork(color[Utils.nextInt(0, color.length)], temp * width / 5, height - 10, 15, 90, height / 2 / 15));
-            last = Utils.Now();
+            lastCheck = Utils.Now();
             temp += unit;
             if (temp == 4 || temp == 1) unit *= -1;
         }
@@ -178,12 +178,12 @@ class subScreen extends View {
 
 class FireWork {
 
-    private int[] num_of_lights = {24, 36, 72, 48, 60};
+    private static final int[] num_of_lights = {24, 36, 72, 48, 60};
     private static final float gravity = 0.987f;
     private float x, y, velocity, angle;
     private Light Lights[];
     private int life;
-    private int lifeCheck = 0;
+    private int lifeCheck;
     private int color;
 
 
@@ -226,7 +226,7 @@ class FireWork {
             velocity *= gravity;
 
             if (lifeCheck == life - 1) for (int i = 0; i < Lights.length; i++)
-                Lights[i].creatPosition(x, y);
+                Lights[i].createPosition(x, y);
 
         } else if (lifeCheck < life + 15) {
 
@@ -267,7 +267,7 @@ class Light {
         this.y += (float) y;
     }
 
-    public void creatPosition(double x, double y) {
+    public void createPosition(double x, double y) {
         this.x = (float) x;
         this.y = (float) y;
     }
@@ -276,23 +276,25 @@ class Light {
 
 class Utils {
 
-    private static Calendar GiaoThua = Calendar.getInstance();
+    public static final Random random;
     private static long GT;
     public static int CountDown = 0;
-    private static long last = Now();
+    private static Calendar GiaoThua;
+    private static long lastCheck;
 
     static {
-        GiaoThua.set(2019, 1, 4, 24, 0, 0);
+        GiaoThua = Calendar.getInstance();
+        GiaoThua.set(2019, 1, 5, 10, 25, 0);
         GT = GiaoThua.getTimeInMillis();
+        lastCheck = Now();
+        random = new Random();
     }
 
     public static long Now() {
         return System.currentTimeMillis();
     }
 
-    public static final Random random = new Random();
-
-    public static final int nextInt(int from, int to) {
+    public static int nextInt(int from, int to) {
         return Math.abs(random.nextInt()) % (to - from) + from;
     }
 
@@ -303,27 +305,32 @@ class Utils {
             CountDown = (int) time;
             subScreen.QUANTITY = 0;
         }
+
         if (time <= 0 && time > -900) {
             if (subScreen.Type == 0) subScreen.Pause = true;
-            if (Now() - last > 10000) {
+            if (Now() - lastCheck > 10000) {
                 subScreen.Pause = true;
-                if (Now() - last > 12000) {
+                if (Now() - lastCheck > 12000) {
                     subScreen.Pause = false;
                     subScreen.Type++;
-                    last = Now();
+                    lastCheck = Now();
                 }
             }
             if (subScreen.Type > 3) subScreen.Type = 1;
-        }
+        } else subScreen.Type = 0;
+
         if (time <= 0) {
             if (time >= -518400) {
                 subScreen.QUANTITY = 12;
                 return "Chúc Mừng Năm Mới, Xuân Kỷ Hợi 2019!!!";
-            } else return "";
+            } else {
+                subScreen.QUANTITY = 7;
+                return "";
+            }
         }
 
         String result;
-        int songay = 0, sogio = 0, sophut = 0, sogiay = 0;
+        int songay = 0, sogio = 0, sophut = 0, sogiay;
 
         if (time > 86400) {
             songay = (int) time / 86400;
